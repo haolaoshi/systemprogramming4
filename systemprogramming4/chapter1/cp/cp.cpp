@@ -7,6 +7,7 @@ int main(int argc,char** argv)
 {
 	if(argc != 3){
 		printf("Usage : cp  file1  file2 \n");
+		printf("standard C: ¡¡fread fwrite fclose fopen \n");
 		return 1;
 	}
 

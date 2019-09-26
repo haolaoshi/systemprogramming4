@@ -7,6 +7,7 @@ int main(int argc , LPTSTR argv[])
 {
 	if(argc != 3){
 		printf("Usage : cpwin file1 file2 \n");
+		printf("CopyFile use Windows  Func \n");
 		return 1;
 	}
 

@@ -8,6 +8,7 @@ int main(int argc, PTSTR argv[])
 {
 	if(argc != 3){
 		printf("usage : cpcpp  f1  f2\n");
+		printf("copy file WINDOWS API version\n");
 		return 1;
 	}
 
