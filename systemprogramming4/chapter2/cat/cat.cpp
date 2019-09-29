@@ -5,7 +5,6 @@
 
 int _tmain(int argc, LPTSTR argv[])
 {
-
 	HANDLE hInfile,hStdin = GetStdHandle(STD_INPUT_HANDLE);
 	HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 

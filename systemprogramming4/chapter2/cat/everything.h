@@ -1,5 +1,4 @@
-#define UNICODE
-#define _UNICODE
+
 
 #include <Windows.h>
 #include <stdio.h>
