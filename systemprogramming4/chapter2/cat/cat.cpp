@@ -16,7 +16,7 @@ int _tmain(int argc, LPTSTR argv[])
 	if(iFirstFile == argc){
 		CatFile(hStdin,hStdout);
 		return 0;
-	}
+	}f/stdDat_jingjing.conf
 
 	//process each input files
 	for(iArg = iFirstFile ; iArg < argc; iArg++){
