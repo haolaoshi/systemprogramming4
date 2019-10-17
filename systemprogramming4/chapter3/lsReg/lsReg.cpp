@@ -88,7 +88,7 @@ DWORD Options (int argc, LPCTSTR argv [], LPCTSTR OptStr, ...)
 	}
 
 	va_end (pFlagList);
-	_tprintf(_T("argv[1]=%s\n"),argv[1]);
+//	_tprintf(_T("argv[1]=%s\n"),argv[1]);
 	for (iArg = 1; iArg < argc && argv [iArg] [0] == '-'; iArg++);
 
 	return iArg;
@@ -125,6 +125,55 @@ VOID ReportError(LPTSTR lpMsg,DWORD val,BOOL showInfo){
 		ExitProcess(val);
 	}
 }
+
+int DisplayResourceNAMessageBox()
+{
+    int msgboxID = MessageBox(
+        NULL,
+        (LPCWSTR)L"没有输入要查找的键值\n难道你是想遍历全部?",
+        (LPCWSTR)L"账户 详情",
+        MB_ICONWARNING | MB_CANCELTRYCONTINUE | MB_DEFBUTTON2
+    );
+
+    switch (msgboxID)
+    {
+    case IDCANCEL:
+        // TODO: add code
+        break;
+    case IDTRYAGAIN:
+        // TODO: add code
+        break;
+    case IDCONTINUE:
+        // TODO: add code
+        break;
+    }
+
+    return msgboxID;
+}
+
+/**
+   HKEY_CLASSES_ROOT
+   HKEY_CURRENT_CONFIG
+   HKEY_CURRENT_USER
+   HKEY_LOCAL_MACHINE
+   HKEY_PERFORMANCE_DATA
+   HKEY_USERS
+   **/
+
+/* Tables of predefined key names and keys */
+LPTSTR PreDefKeyNames [] = {
+	_T("HKEY_LOCAL_MACHINE"),
+	_T("HKEY_CLASSES_ROOT"),
+	_T("HKEY_CURRENT_USER"),
+	_T("HKEY_CURRENT_CONFIG"),
+	NULL };
+HKEY PreDefKeys [] = {
+	HKEY_LOCAL_MACHINE,
+	HKEY_CLASSES_ROOT,
+	HKEY_CURRENT_USER,
+	HKEY_CURRENT_CONFIG 
+};
+
 int _tmain (int argc, LPTSTR argv [])
 {
 	BOOL Flags[2], ok = TRUE;
@@ -133,18 +182,7 @@ int _tmain (int argc, LPTSTR argv [])
 	DWORD i, KeyIndex;
 	HKEY hKey, hNextKey;
 
-	/* Tables of predefined key names and keys */
-	LPTSTR PreDefKeyNames [] = {
-		_T("HKEY_LOCAL_MACHINE"),
-		_T("HKEY_CLASSES_ROOT"),
-		_T("HKEY_CURRENT_USER"),
-		_T("HKEY_CURRENT_CONFIG"),
-		NULL };
-	HKEY PreDefKeys [] = {
-		HKEY_LOCAL_MACHINE,
-		HKEY_CLASSES_ROOT,
-		HKEY_CURRENT_USER,
-		HKEY_CURRENT_CONFIG };
+
 
 		if (argc < 2) {
 			_tprintf (_T("Usage: lsREG [options] SubKey\n"));
@@ -152,6 +190,10 @@ int _tmain (int argc, LPTSTR argv [])
 		}
 
 	KeyIndex = Options (argc, (LPCTSTR*)argv, _T ("Rl"), &Flags[0], &Flags[1], NULL);
+	if(KeyIndex == argc){
+		DisplayResourceNAMessageBox();
+		return 2;
+	}
 
 	/* "Parse" the search pattern into two parts: the "key"
 		and the "subkey". The key is the first back-slash terminated
@@ -169,13 +211,25 @@ int _tmain (int argc, LPTSTR argv [])
 	for (	i = 0;
 			PreDefKeyNames[i] != NULL && _tcscmp (PreDefKeyNames[i], KeyName) != 0;
 			i++) ;
-	if (PreDefKeyNames[i] == NULL) ReportError (_T("Use a Predefined Key"), 1, FALSE);
+	if (PreDefKeyNames[i] == NULL) ReportError (_T("您没有使用我会所的会员卡!"), 1, FALSE);
 	hKey = PreDefKeys[i];
 
 	/*  pScan points to the start of the subkey string. It is not directly
 		documented that \ is the separator, but it works fine */
+	/**
+	LSTATUS RegOpenKeyExA(
+	  HKEY   hKey,
+	  LPCSTR lpSubKey,	//The name of the registry subkey to be opened.
+						//Key names are not case sensitive.
+						//The lpSubKey parameter can be a pointer to an empty string. If lpSubKey is a pointer to an empty string and hKey is HKEY_CLASSES_ROOT, phkResult receives the same hKey handle passed into the function. Otherwise, phkResult receives a new handle to the key specified by hKey.
+						//The lpSubKey parameter can be NULL only if hKey is one of the predefined keys. If lpSubKey is NULL and hKey is
+	  DWORD  ulOptions,//Specifies the option to apply when opening the key. Set this parameter to zero or the following:
+	  REGSAM samDesired,//A mask that specifies the desired access rights to the key to be opened. The function fails if the security descriptor of the key does not permit the requested access for the calling process. 
+	  PHKEY  phkResult//A pointer to a variable that receives a handle to the opened key. If the key is not one of the predefined registry keys, call the RegCloseKey function after you have finished using the handle.
+	);
+	**/
 	if (RegOpenKeyEx (hKey, pScan, 0, KEY_READ, &hNextKey) != ERROR_SUCCESS)
-		ReportError (_T("Cannot open subkey properly"), 2, TRUE);
+		ReportError (_T("您的余额不足!!!"), 2, TRUE);
 	hKey = hNextKey;
 
 	ok = TraverseRegistry (hKey, argv[KeyIndex], NULL, Flags);
@@ -183,6 +237,15 @@ int _tmain (int argc, LPTSTR argv [])
 	return ok ? 0 : 1;
 }
 
+BOOL isDefinedKey(HKEY key){
+	int i = 0;
+	for (	i = 0;
+		PreDefKeys[i] != NULL &&  (PreDefKeys[i] == key) != 0;
+		i++) ;
+	if (PreDefKeys[i] == NULL) ReportError (_T("您没有使用我会所的会员卡!"), 1, FALSE);
+
+	return TRUE;
+}
 BOOL TraverseRegistry (HKEY hKey, LPTSTR FullKeyName, LPTSTR SubKey, LPBOOL Flags)
 
 /*	Traverse a registry key, listing the name-value pairs and
@@ -193,7 +256,7 @@ BOOL TraverseRegistry (HKEY hKey, LPTSTR FullKeyName, LPTSTR SubKey, LPBOOL Flag
 
 {
 	HKEY hSubKey;
-	BOOL Recursive = Flags [0];
+	BOOL Recursive = Flags [0];//-R
 	LONG Result;
 	DWORD ValueType, Index;
 	DWORD NumSubKeys, MaxSubKeyLen, NumValues, MaxValueNameLen, MaxValueLen;
@@ -203,17 +266,33 @@ BOOL TraverseRegistry (HKEY hKey, LPTSTR FullKeyName, LPTSTR SubKey, LPBOOL Flag
 	LPBYTE Value;
 	TCHAR FullSubKeyName [MAX_PATH+1];
 
-	/* Open up the key handle. */
+	/* Open up the key handle. Opens the specified registry key. Note that key names are not case sensitive. */
 
 	if (RegOpenKeyEx (hKey, SubKey, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS)
 		ReportError (_T("\nCannot open subkey"), 2, TRUE);
 
 	/*  Find max size info regarding the key and allocate storage */
+	/**
+	LSTATUS RegQueryInfoKeyW(
+	  HKEY      hKey,//A handle to an open registry key. The key must have been opened with the KEY_QUERY_VALUE access right. 
+	  LPWSTR    lpClass,
+	  LPDWORD   lpcchClass,
+	  LPDWORD   lpReserved,
+	  LPDWORD   lpcSubKeys,
+	  LPDWORD   lpcbMaxSubKeyLen,//A pointer to a variable that receives the size of the key's subkey with the longest name, in Unicode characters, not including the terminating null character. This parameter can be NULL.
+	  LPDWORD   lpcbMaxClassLen,//A pointer to a variable that receives the size of the longest string that specifies a subkey class, in Unicode characters. 
+	  LPDWORD   lpcValues,
+	  LPDWORD   lpcbMaxValueNameLen,//A pointer to a variable that receives the size of the key's longest value name, 
+	  LPDWORD   lpcbMaxValueLen,//A pointer to a variable that receives the size of the longest data component among the key's values, in bytes. This parameter can be NULL.
+	  LPDWORD   lpcbSecurityDescriptor,
+	  PFILETIME lpftLastWriteTime
+	);**/
 	if (RegQueryInfoKey (hSubKey, NULL, NULL, NULL, 
 		&NumSubKeys, &MaxSubKeyLen, NULL, 
 		&NumValues, &MaxValueNameLen, &MaxValueLen, 
 		NULL, &LastWriteTime) != ERROR_SUCCESS)
 			ReportError (_T("Cannot query subkey information"), 3, TRUE);
+
 	SubKeyName = (LPTSTR)malloc (MaxSubKeyLen+1);   /* size in characters w/o null */
 	ValueName  = (LPTSTR)malloc (MaxValueNameLen+1);/* so add one to allow for null */
 	Value      = (LPBYTE)malloc (MaxValueLen);      /* size in bytes */
@@ -222,6 +301,7 @@ BOOL TraverseRegistry (HKEY hKey, LPTSTR FullKeyName, LPTSTR SubKey, LPBOOL Flag
 	for (	Index = 0; Index < NumValues; Index++) {
 		ValueNameLen = MaxValueNameLen + 1; /* A very common bug is to forget to set */
 		ValueLen     = MaxValueLen + 1;     /* these values, both function input and output */
+		//Enumerates the values for the specified open registry key. The function copies one indexed value name and data block for the key each time it is called.
 		Result = RegEnumValue (hSubKey, Index, ValueName, &ValueNameLen, NULL,
 				&ValueType, Value, &ValueLen);
 		if (Result == ERROR_SUCCESS && GetLastError() == 0)
@@ -233,6 +313,7 @@ BOOL TraverseRegistry (HKEY hKey, LPTSTR FullKeyName, LPTSTR SubKey, LPBOOL Flag
 	/*  Second pass for subkeys */
 	for (Index = 0; Index < NumSubKeys; Index++) {
 		SubKeyNameLen = MaxSubKeyLen + 1;
+		//Enumerates the subkeys of the specified open registry key. The function retrieves information about one subkey each time it is called.
 		Result = RegEnumKeyEx (hSubKey, Index, SubKeyName, &SubKeyNameLen, NULL,
 				NULL, NULL, &LastWriteTime);
 		if (GetLastError() == 0) {
@@ -247,10 +328,20 @@ BOOL TraverseRegistry (HKEY hKey, LPTSTR FullKeyName, LPTSTR SubKey, LPBOOL Flag
 	}
 
 	_tprintf (_T("\n"));
-	free (SubKeyName); 
-	free (ValueName);
-	free (Value);
-	RegCloseKey (hSubKey);
+	if(SubKeyName != NULL){
+		free (SubKeyName);
+		SubKeyName = NULL;
+	}
+	if(ValueName!= NULL){
+		free (ValueName);
+		ValueName = NULL;
+	}
+	if(Value!= NULL){
+		free (Value);
+	}
+	if(hSubKey!= NULL){
+		RegCloseKey (hSubKey);
+	}
 	return TRUE;
 }
 

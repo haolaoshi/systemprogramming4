@@ -84,3 +84,20 @@ int _tmain(int argc , LPTSTR argv[])
 	}
 	return 0;
 }
+
+/**
+BOOL LockFileEx(
+  HANDLE       hFile,
+  DWORD        dwFlags,
+  DWORD        dwReserved,
+  DWORD        nNumberOfBytesToLockLow,
+  DWORD        nNumberOfBytesToLockHigh,
+  LPOVERLAPPED lpOverlapped
+);
+BOOL UnlockFileEx(
+  HANDLE       hFile,
+  DWORD        dwReserved,
+  DWORD        nNumberOfBytesToUnlockLow,
+  DWORD        nNumberOfBytesToUnlockHigh,
+  LPOVERLAPPED lpOverlapped
+);*/
