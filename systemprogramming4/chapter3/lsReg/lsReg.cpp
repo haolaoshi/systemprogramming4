@@ -217,16 +217,13 @@ int _tmain (int argc, LPTSTR argv [])
 	/*  pScan points to the start of the subkey string. It is not directly
 		documented that \ is the separator, but it works fine */
 	/**
-	LSTATUS RegOpenKeyExA(
-	  HKEY   hKey,
-	  LPCSTR lpSubKey,	//The name of the registry subkey to be opened.
-						//Key names are not case sensitive.
-						//The lpSubKey parameter can be a pointer to an empty string. If lpSubKey is a pointer to an empty string and hKey is HKEY_CLASSES_ROOT, phkResult receives the same hKey handle passed into the function. Otherwise, phkResult receives a new handle to the key specified by hKey.
-						//The lpSubKey parameter can be NULL only if hKey is one of the predefined keys. If lpSubKey is NULL and hKey is
-	  DWORD  ulOptions,//Specifies the option to apply when opening the key. Set this parameter to zero or the following:
-	  REGSAM samDesired,//A mask that specifies the desired access rights to the key to be opened. The function fails if the security descriptor of the key does not permit the requested access for the calling process. 
-	  PHKEY  phkResult//A pointer to a variable that receives a handle to the opened key. If the key is not one of the predefined registry keys, call the RegCloseKey function after you have finished using the handle.
-	);
+		 LONG RegOpenKeyEx(
+		  HKEY hKey,
+		  LPCWSTR lpSubKey,
+		  DWORD ulOptions,
+		  REGSAM samDesired,
+		  PHKEY phkResult
+		);
 	**/
 	if (RegOpenKeyEx (hKey, pScan, 0, KEY_READ, &hNextKey) != ERROR_SUCCESS)
 		ReportError (_T("ÄúµÄÓà¶î²»×ã!!!"), 2, TRUE);
@@ -273,20 +270,21 @@ BOOL TraverseRegistry (HKEY hKey, LPTSTR FullKeyName, LPTSTR SubKey, LPBOOL Flag
 
 	/*  Find max size info regarding the key and allocate storage */
 	/**
-	LSTATUS RegQueryInfoKeyW(
-	  HKEY      hKey,//A handle to an open registry key. The key must have been opened with the KEY_QUERY_VALUE access right. 
-	  LPWSTR    lpClass,
-	  LPDWORD   lpcchClass,
-	  LPDWORD   lpReserved,
-	  LPDWORD   lpcSubKeys,
-	  LPDWORD   lpcbMaxSubKeyLen,//A pointer to a variable that receives the size of the key's subkey with the longest name, in Unicode characters, not including the terminating null character. This parameter can be NULL.
-	  LPDWORD   lpcbMaxClassLen,//A pointer to a variable that receives the size of the longest string that specifies a subkey class, in Unicode characters. 
-	  LPDWORD   lpcValues,
-	  LPDWORD   lpcbMaxValueNameLen,//A pointer to a variable that receives the size of the key's longest value name, 
-	  LPDWORD   lpcbMaxValueLen,//A pointer to a variable that receives the size of the longest data component among the key's values, in bytes. This parameter can be NULL.
-	  LPDWORD   lpcbSecurityDescriptor,
-	  PFILETIME lpftLastWriteTime
-	);**/
+
+       LSTATUS RegQueryInfoKeyW(
+         HKEY      hKey,
+         LPWSTR    lpClass,
+         LPDWORD   lpcchClass,
+         LPDWORD   lpReserved,
+         LPDWORD   lpcSubKeys,
+         LPDWORD   lpcbMaxSubKeyLen,
+         LPDWORD   lpcbMaxClassLen,
+         LPDWORD   lpcValues,
+         LPDWORD   lpcbMaxValueNameLen,
+         LPDWORD   lpcbMaxValueLen,
+         LPDWORD   lpcbSecurityDescriptor,
+         PFILETIME lpftLastWriteTime
+       );**/
 	if (RegQueryInfoKey (hSubKey, NULL, NULL, NULL, 
 		&NumSubKeys, &MaxSubKeyLen, NULL, 
 		&NumValues, &MaxValueNameLen, &MaxValueLen, 
@@ -301,7 +299,8 @@ BOOL TraverseRegistry (HKEY hKey, LPTSTR FullKeyName, LPTSTR SubKey, LPBOOL Flag
 	for (	Index = 0; Index < NumValues; Index++) {
 		ValueNameLen = MaxValueNameLen + 1; /* A very common bug is to forget to set */
 		ValueLen     = MaxValueLen + 1;     /* these values, both function input and output */
-		//Enumerates the values for the specified open registry key. The function copies one indexed value name and data block for the key each time it is called.
+		//Enumerates the values for the specified open registry key. 
+		//The function copies one indexed value name and data block for the key each time it is called.
 		Result = RegEnumValue (hSubKey, Index, ValueName, &ValueNameLen, NULL,
 				&ValueType, Value, &ValueLen);
 		if (Result == ERROR_SUCCESS && GetLastError() == 0)
@@ -313,7 +312,8 @@ BOOL TraverseRegistry (HKEY hKey, LPTSTR FullKeyName, LPTSTR SubKey, LPBOOL Flag
 	/*  Second pass for subkeys */
 	for (Index = 0; Index < NumSubKeys; Index++) {
 		SubKeyNameLen = MaxSubKeyLen + 1;
-		//Enumerates the subkeys of the specified open registry key. The function retrieves information about one subkey each time it is called.
+		//Enumerates the subkeys of the specified open registry key. 
+		//The function retrieves information about one subkey each time it is called.
 		Result = RegEnumKeyEx (hSubKey, Index, SubKeyName, &SubKeyNameLen, NULL,
 				NULL, NULL, &LastWriteTime);
 		if (GetLastError() == 0) {
