@@ -26,11 +26,12 @@ int wmain(int argc, WCHAR **argv)
 	DWORD dwSectPerClust, dwBytesPerSect, dwFreeClusters, dwTotalClusters;//typedef unsigned long 4
 	P_GDFSE pGetDiskFreeSpaceEx = NULL;//4
 	unsigned __int64 i64FreeBytesToCaller, i64TotalBytes, i64FreeBytes;//8
-wprintf(L"\tBOOL width:  %d  \n", sizeof(BOOL));
-wprintf(L"\tWCHAR width:  %d  \n", sizeof(WCHAR));
-wprintf(L"\tDWORD width:  %d  \n", sizeof(DWORD));
-wprintf(L"\tP_GDFSE width:  %d  \n", sizeof(P_GDFSE));
-wprintf(L"\tunsigned __int64 width:  %d  \n", sizeof(unsigned __int64));
+	/**
+wprintf(L"\tBOOL width:  %d  \n", sizeof(BOOL)); //4
+wprintf(L"\tWCHAR width:  %d  \n", sizeof(WCHAR)); //2
+wprintf(L"\tDWORD width:  %d  \n", sizeof(DWORD));//4
+wprintf(L"\tP_GDFSE width:  %d  \n", sizeof(P_GDFSE));//4
+wprintf(L"\tunsigned __int64 width:  %d  \n", sizeof(unsigned __int64)); //8**/
 	/* Command line parsing.
 	If the drive is a drive letter and not a UNC path, append a trailing
 	backslash to the drive letter and colon.  This is required on Windows 95 and 98. */
@@ -75,7 +76,8 @@ wprintf(L"\tunsigned __int64 width:  %d  \n", sizeof(unsigned __int64));
 		}
 	}
 	else
-	{
+	{// CAN ONLY REPORT 2GB AT MOST UNDER WIN95 , 
+		//This limitation originated because the first version of Windows 95 only supportsed volumes of up to 2GB in size
 		fResult = GetDiskFreeSpace((LPCWSTR)pszDrive, &dwSectPerClust, &dwBytesPerSect, &dwFreeClusters, &dwTotalClusters);
 		if (fResult)
 		{
